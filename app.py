@@ -1,6 +1,6 @@
 import streamlit as st
 
-# 🎨 [UI 설정] 순정 상태 (에러를 일으키던 숨김 코드 전부 제거)
+# [UI 설정] 배경 이미지만 깔끔하게 적용
 st.set_page_config(page_title="다낭 위드어스 AI", layout="wide")
 
 import streamlit.components.v1 as components
@@ -10,32 +10,23 @@ from googleapiclient.discovery import build
 import json
 import datetime, requests, uuid, os, urllib.parse, base64, re, html, threading
 
-# ==========================================
-# 🚨 [설정] 대표님의 고유 정보 (스트림릿 금고에서 가져오기)
-# ==========================================
+# [설정] 스트림릿 금고에서 가져오기
 TELEGRAM_BOT_TOKEN = st.secrets["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = st.secrets["TELEGRAM_CHAT_ID"]
 API_KEY = st.secrets["API_KEY"]
 SHEET_ID = st.secrets["SHEET_ID"]
 
-# 구글 시트 연결을 위한 금고 데이터 가져오기
+# 구글 서비스 계정 연결
 creds_dict = json.loads(st.secrets["GCP_SERVICE_ACCOUNT_JSON"])
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
 creds = service_account.Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
-# ==========================================
-RE_PHOTO = re.compile(r'(?:사진\s*보기|사진\s*확인|사진확인|사진링크).*?((?:http|https)://[^\s\)]+)')
-RE_VIDEO = re.compile(r'(?:영상\s*보기|영상\s*확인|영상확인|영상링크).*?((?:http|https)://[^\s\)]+)')
-RE_MAP = re.compile(r'(?:위치\s*보기|구글\s*맵|지도\s*보기|위치\s*확인).*?((?:http|https)://[^\s\)]+)')
-RE_KAKAO = re.compile(r'(https://open\.kakao\.com/[^\s\)]+)')
-RE_CLEAN = re.compile(r'(?:사진|영상|위치|지도|링크|오픈채팅|확인).*?((?:http|https)://\S+)')
-
-# ==========================================
 # 🚀 [최적화 2] 구글 시트 인증 객체 캐싱
 # ==========================================
 @st.cache_resource
 def get_sheets_service():
     try:
-        creds = service_account.Credentials.from_service_account_file('credentials.json')
+        # 파일 대신 금고(Secrets) 데이터를 사용하도록 수정
+        creds = service_account.Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
         return build('sheets', 'v4', credentials=creds)
     except Exception as e:
         return None
