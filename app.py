@@ -1,4 +1,20 @@
 import streamlit as st
+
+# 🎨 [UI 설정] 배경, 왕관 버튼, 메뉴 등 불필요한 요소 숨기기 (무조건 최상단에 위치)
+st.set_page_config(page_title="다낭 위드어스 AI", layout="wide")
+st.markdown("""
+<style>
+    /* 우측 하단 프로필 배지 숨기기 */
+    .viewerBadge_container {display: none !important;}
+    /* 우측 하단 빨간 왕관(Deploy) 버튼 숨기기 */
+    .stDeployButton {display: none !important;}
+    /* 상단 헤더, 우측 상단 메뉴, 하단 푸터 숨기기 */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+</style>
+""", unsafe_allow_html=True)
+
 import streamlit.components.v1 as components
 import google.generativeai as genai
 from google.oauth2 import service_account
@@ -7,21 +23,18 @@ import json
 import datetime, requests, uuid, os, urllib.parse, base64, re, html, threading
 
 # ==========================================
-# 🚨 [설정] 대표님의 고유 정보
-# ==========================================
-# ---------------------------------------------------------
 # 🚨 [설정] 대표님의 고유 정보 (스트림릿 금고에서 가져오기)
-# ---------------------------------------------------------
+# ------------------------------------------
 TELEGRAM_BOT_TOKEN = st.secrets["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = st.secrets["TELEGRAM_CHAT_ID"]
 API_KEY = st.secrets["API_KEY"]
 SHEET_ID = st.secrets["SHEET_ID"]
 
-# 구글 시트 연결을 위한 금고 데이터 가져오기 (추가)
+# 구글 시트 연결을 위한 금고 데이터 가져오기
 creds_dict = json.loads(st.secrets["GCP_SERVICE_ACCOUNT_JSON"])
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
 creds = service_account.Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
-# ---------------------------------------------------------
+# ==========================================
 
 genai.configure(api_key=API_KEY)
 
@@ -616,3 +629,4 @@ with st.sidebar:
     time_html = """<div style="display: flex; justify-content: center; align-items: center; height: 100%;"><div id="clock" style="color: #ffffff; font-size: 32px; font-weight: 900; font-family: sans-serif; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 3px 3px 5px rgba(0,0,0,0.8);"></div></div><script>function updateTime() {let options = { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };let timeString = new Date().toLocaleTimeString('ko-KR', options);document.getElementById('clock').innerText = timeString;}setInterval(updateTime, 1000);updateTime();</script>"""
 
     components.html(time_html, height=60)
+
