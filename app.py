@@ -95,7 +95,7 @@ if prompt := st.chat_input("위블리에게 여행 계획을 물어보세요!"):
         placeholder.markdown("🌀 위블리가 확인하고 있어요...")
         
         genai.configure(api_key=API_KEY)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-3-flash-preview')
         response = model.generate_content(f"당신은 위블리입니다. 질문: {prompt}")
         full_res = response.text
         
