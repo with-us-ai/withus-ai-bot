@@ -100,10 +100,11 @@ if prompt := st.chat_input("위블리에게 질문해 보세요!"):
         try:
             genai.configure(api_key=API_KEY)
             # 🚨 gemini-1.5-flash 모델을 사용하여 안정성을 높였습니다.
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel('gemini-3-flash-preview')
             response = model.generate_content(f"{master_instruction}\n질문: {prompt}")
             full_res = response.text
             placeholder.markdown(full_res)
             st.session_state.messages.append({"role": "assistant", "content": full_res})
         except Exception as e:
             placeholder.error(f"죄송해요, AI 응답 중 오류가 발생했어요: {e}")
+
