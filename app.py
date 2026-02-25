@@ -8,10 +8,6 @@ st.markdown("""
     .viewerBadge_container {display: none !important;}
     /* 우측 하단 빨간 왕관(Deploy) 버튼 숨기기 */
     .stDeployButton {display: none !important;}
-    /* 상단 헤더, 우측 상단 메뉴, 하단 푸터 숨기기 */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -35,8 +31,6 @@ creds_dict = json.loads(st.secrets["GCP_SERVICE_ACCOUNT_JSON"])
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
 creds = service_account.Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
 # ==========================================
-
-genai.configure(api_key=API_KEY)
 
 # ==========================================
 # 🚀 [최적화 1] 정규식 패턴 (오픈채팅 버튼화 완벽 적용)
@@ -627,6 +621,4 @@ with st.sidebar:
     st.divider()
     st.markdown(f"""<h3 style="{t_style}">⏰ 다낭 시간</h3>""", unsafe_allow_html=True)
     time_html = """<div style="display: flex; justify-content: center; align-items: center; height: 100%;"><div id="clock" style="color: #ffffff; font-size: 32px; font-weight: 900; font-family: sans-serif; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 3px 3px 5px rgba(0,0,0,0.8);"></div></div><script>function updateTime() {let options = { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };let timeString = new Date().toLocaleTimeString('ko-KR', options);document.getElementById('clock').innerText = timeString;}setInterval(updateTime, 1000);updateTime();</script>"""
-
     components.html(time_html, height=60)
-
