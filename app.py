@@ -1,15 +1,7 @@
 import streamlit as st
 
-# 🎨 [UI 설정] 배경, 왕관 버튼, 메뉴 등 불필요한 요소 숨기기 (무조건 최상단에 위치)
+# 🎨 [UI 설정] 순정 상태 (에러를 일으키던 숨김 코드 전부 제거)
 st.set_page_config(page_title="다낭 위드어스 AI", layout="wide")
-st.markdown("""
-<style>
-    /* 우측 하단 프로필 배지 숨기기 */
-    .viewerBadge_container {display: none !important;}
-    /* 우측 하단 빨간 왕관(Deploy) 버튼 숨기기 */
-    .stDeployButton {display: none !important;}
-</style>
-""", unsafe_allow_html=True)
 
 import streamlit.components.v1 as components
 import google.generativeai as genai
@@ -20,7 +12,7 @@ import datetime, requests, uuid, os, urllib.parse, base64, re, html, threading
 
 # ==========================================
 # 🚨 [설정] 대표님의 고유 정보 (스트림릿 금고에서 가져오기)
-# ------------------------------------------
+# ==========================================
 TELEGRAM_BOT_TOKEN = st.secrets["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = st.secrets["TELEGRAM_CHAT_ID"]
 API_KEY = st.secrets["API_KEY"]
@@ -30,10 +22,6 @@ SHEET_ID = st.secrets["SHEET_ID"]
 creds_dict = json.loads(st.secrets["GCP_SERVICE_ACCOUNT_JSON"])
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
 creds = service_account.Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
-# ==========================================
-
-# ==========================================
-# 🚀 [최적화 1] 정규식 패턴 (오픈채팅 버튼화 완벽 적용)
 # ==========================================
 RE_PHOTO = re.compile(r'(?:사진\s*보기|사진\s*확인|사진확인|사진링크).*?((?:http|https)://[^\s\)]+)')
 RE_VIDEO = re.compile(r'(?:영상\s*보기|영상\s*확인|영상확인|영상링크).*?((?:http|https)://[^\s\)]+)')
