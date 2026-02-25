@@ -1,17 +1,27 @@
 import streamlit as st
-import streamlit.components.v1 as components 
+import streamlit.components.v1 as components
 import google.generativeai as genai
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+import json
 import datetime, requests, uuid, os, urllib.parse, base64, re, html, threading
 
 # ==========================================
 # 🚨 [설정] 대표님의 고유 정보
 # ==========================================
-TELEGRAM_BOT_TOKEN = "8600043269:AAEJ6WYBzxrbuM21tB4qsROy1vE0wiq_Pdc"
-TELEGRAM_CHAT_ID = "6043903515"
-API_KEY = "AIzaSyA9m5N1VI5aBSjgah36fFRbxe2y2CXqiBY"
-SHEET_ID = "1fU954PzRt8vuwhUldNA8PP8KXgXTZJ6eOGhLuycco4I"
+# ---------------------------------------------------------
+# 🚨 [설정] 대표님의 고유 정보 (스트림릿 금고에서 가져오기)
+# ---------------------------------------------------------
+TELEGRAM_BOT_TOKEN = st.secrets["TELEGRAM_BOT_TOKEN"]
+TELEGRAM_CHAT_ID = st.secrets["TELEGRAM_CHAT_ID"]
+API_KEY = st.secrets["API_KEY"]
+SHEET_ID = st.secrets["SHEET_ID"]
+
+# 구글 시트 연결을 위한 금고 데이터 가져오기 (추가)
+creds_dict = json.loads(st.secrets["GCP_SERVICE_ACCOUNT_JSON"])
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
+creds = service_account.Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
+# ---------------------------------------------------------
 
 genai.configure(api_key=API_KEY)
 
@@ -604,4 +614,5 @@ with st.sidebar:
     st.divider()
     st.markdown(f"""<h3 style="{t_style}">⏰ 다낭 시간</h3>""", unsafe_allow_html=True)
     time_html = """<div style="display: flex; justify-content: center; align-items: center; height: 100%;"><div id="clock" style="color: #ffffff; font-size: 32px; font-weight: 900; font-family: sans-serif; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 3px 3px 5px rgba(0,0,0,0.8);"></div></div><script>function updateTime() {let options = { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };let timeString = new Date().toLocaleTimeString('ko-KR', options);document.getElementById('clock').innerText = timeString;}setInterval(updateTime, 1000);updateTime();</script>"""
+
     components.html(time_html, height=60)
