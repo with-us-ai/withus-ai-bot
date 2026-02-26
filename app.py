@@ -9,7 +9,7 @@ import json, datetime, requests, uuid, os, urllib.parse, base64, re, html, threa
 st.set_page_config(page_title="다낭 위드어스 AI 컨시어지", page_icon="🌴", layout="wide")
 
 # ==========================================
-# 🚨 [설정] 대표님의 고유 정보 (스트림릿 금고 연동)
+# 🚨 [설정] 대표님의 고유 정보
 # ==========================================
 TELEGRAM_BOT_TOKEN = st.secrets["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = st.secrets["TELEGRAM_CHAT_ID"]
@@ -267,7 +267,7 @@ if prompt := st.chat_input("인원과 날짜를 말씀해 주세요!"):
         placeholder = st.empty()
         placeholder.markdown("✨ **위블리가 실시간 DB를 확인하여 맞춤 견적을 작성 중입니다...** ⏳")
 
-        # 🚨 [수정됨] 민감 키워드 검사 (하이브리드 지원)
+        # 🚨 민감 키워드 검사
         vip_keywords = ["가라오케", "에코걸", "에코", "떡마사지", "VIP마사지", "불건전", "가라", "떡마사", "VIP마사","불건마", "불건마사", "불건마사지"]
         
         prompt_no_space = prompt.replace(" ", "")
@@ -278,7 +278,7 @@ if prompt := st.chat_input("인원과 날짜를 말씀해 주세요!"):
             for kw in vip_keywords:
                 safe_prompt = safe_prompt.replace(kw, "").strip()
 
-        # 🚨 [수정됨] 귀여운 VIP 철벽 템플릿
+        # 🚨 귀여운 VIP 철벽 템플릿
         vip_template = """\n\n━━━━━━━━━━━━━━
 🔥 **다낭 위드어스 스페셜 문의**
 ━━━━━━━━━━━━━━
@@ -300,7 +300,10 @@ if prompt := st.chat_input("인원과 날짜를 말씀해 주세요!"):
         
         # 정상적인 질문이 포함되어 있는 경우 (AI 처리 + 맨 밑에 철벽 멘트 추가)
         else:
-            history_context = "\n".join([f"{m['role']}: {m['content']}" for m in st.session_state.messages[-10:]])
+            # 🚨 1. 히스토리에서 민감 키워드 싹 지우기 (AI가 훔쳐보지 못하게 원천 차단!)
+            clean_history = "\n".join([f"{m['role']}: {m['content']}" for m in st.session_state.messages[-10:]])
+            for kw in vip_keywords:
+                clean_history = clean_history.replace(kw, "")
 
             master_instruction = f"""당신은 다낭 위드어스 매니저 '위블리'입니다.
 아래 [🚨 상황별 답변 지침]을 우선적으로 파악하여 똑똑하게 대답하세요.
@@ -328,6 +331,7 @@ if prompt := st.chat_input("인원과 날짜를 말씀해 주세요!"):
 2. 기억력: 위 대화 히스토리에서 고객이 말한 사항을 절대 다시 묻지 마세요.
 3. ★우선 추천 풀빌라: 인원수(=룸 개수)에 따라 무조건 1순위로 추천하세요! (2룸:미니더블, 3룸:블랙미러, 4룸:블루에덴1/버블캐슬5, 5룸:피크닉, 6룸:피크닉2, 8룸:네온드림)
 4. ★차량(솔라티) 견적 룰: 기본 단가는 무조건 '80달러'로 계산하세요.
+5. 🚫 ★초강력 민감 정보 차단★: 고객의 질문에 유흥, 에코걸, 가라오케 등 민감한 키워드가 포함되어 있더라도, 견적서의 '추가 서비스 견적'이나 본문 그 어디에도 절대 1글자도 언급하지 마세요! "특수 서비스"라는 말도 절대 쓰지 마세요. 오직 풀빌라와 차량, 일반 마사지 견적만 작성해야 합니다.
 
 [가견적 템플릿 (상황 A에서만 사용!)]
 ━━━━━━━━━━━━━━
@@ -358,7 +362,7 @@ if prompt := st.chat_input("인원과 날짜를 말씀해 주세요!"):
 [실시간 DB]
 {db}
 [대화 히스토리]
-{history_context}"""
+{clean_history}"""
 
             try:
                 # 🚀 확고한 지시대로 gemini-3-flash-preview 고정
