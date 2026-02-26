@@ -9,7 +9,7 @@ import json, datetime, requests, uuid, os, urllib.parse, base64, re, html, threa
 st.set_page_config(page_title="다낭 위드어스 AI 컨시어지", page_icon="🌴", layout="wide")
 
 # ==========================================
-# 🚨 [설정] 대표님의 고유 정보 (스트림릿 금고 연동!)
+# 🚨 [설정] 대표님의 고유 정보 (스트림릿 금고 연동)
 # ==========================================
 TELEGRAM_BOT_TOKEN = st.secrets["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID = st.secrets["TELEGRAM_CHAT_ID"]
@@ -23,11 +23,11 @@ genai.configure(api_key=API_KEY)
 # ==========================================
 # 🚀 [최적화 1] 정규식 패턴 미리 로드
 # ==========================================
-RE_PHOTO = re.compile(r'사진\s*보기.*?((?:http|https)://[^\s\)]+)')
-RE_VIDEO = re.compile(r'영상\s*보기.*?((?:http|https)://[^\s\)]+)')
-RE_MAP = re.compile(r'위치\s*보기.*?((?:http|https)://[^\s\)]+)')
-RE_KAKAO = re.compile(r'오픈채팅.*?((?:http|https)://open\.kakao\.com/[^\s\)]+)')
-RE_CLEAN = re.compile(r'(사진 보기:|영상 보기:|위치 보기:|오픈채팅:).*?((?:http|https)://\S+)')
+RE_PHOTO = re.compile(r'(?:사진\s*보기|사진\s*확인|사진확인|사진링크).*?((?:http|https)://[^\s\]]+)')
+RE_VIDEO = re.compile(r'(?:영상\s*보기|영상\s*확인|영상확인|영상링크).*?((?:http|https)://[^\s\]]+)')
+RE_MAP = re.compile(r'(?:위치\s*보기|구글\s*맵|지도\s*보기|위치\s*확인).*?((?:http|https)://[^\s\]]+)')
+RE_KAKAO = re.compile(r'(https://open\.kakao\.com/[^\s\]]+)')
+RE_CLEAN = re.compile(r'(?:사진|영상|위치|지도|링크|오픈채팅|확인).*?((?:http|https)://\S+)')
 
 # ==========================================
 # 🚀 [최적화 2] 구글 시트 인증 (금고 데이터 사용)
@@ -91,6 +91,25 @@ def append_to_sheet(u_id, u_t, a_t):
 def run_background_tasks(u_id, u_m, a_m):
     threading.Thread(target=append_to_sheet, args=(u_id, u_m, a_m)).start()
     threading.Thread(target=send_tele, args=(u_id, u_m, a_m)).start()
+
+# 🚀 [오토 스크롤 엔진]
+def auto_scroll_to_bottom():
+    js_code = """
+    <script>
+        function scrollToBottom() {
+            try {
+                var doc = window.parent.document;
+                var chatBoxes = doc.querySelectorAll('[data-testid="stChatMessage"]');
+                if (chatBoxes && chatBoxes.length > 0) {
+                    chatBoxes[chatBoxes.length - 1].scrollIntoView({ behavior: 'smooth', block: 'end' });
+                }
+            } catch (e) {}
+        }
+        setTimeout(scrollToBottom, 100);
+        setTimeout(scrollToBottom, 500);
+    </script>
+    """
+    components.html(js_code, height=0)
 
 # ==========================================
 # 🎨 UI 디자인
@@ -156,7 +175,7 @@ if "messages" not in st.session_state: st.session_state.messages = []
 if "user_id" not in st.session_state: st.session_state.user_id = str(uuid.uuid4())
 
 # ==========================================
-# 🛠️ 렌더링 엔진
+# 🛠️ 렌더링 엔진 (버튼 생성기)
 # ==========================================
 def render_assistant_content(content):
     lines = content.split('\n')
@@ -232,70 +251,54 @@ with col:
             if msg["role"] == "assistant": render_assistant_content(msg["content"])
             else: st.markdown(msg["content"])
 
+# 🚀 메시지 출력 후 스크롤 내리기
+auto_scroll_to_bottom()
+
 if prompt := st.chat_input("인원과 날짜를 말씀해 주세요!"):
     st.session_state.messages.append({"role": "user", "content": prompt})
 
     with st.chat_message("user", avatar=USER_AVATAR):
         st.markdown(prompt)
+        
+    # 입력과 동시에 다시 한번 스크롤 내리기
+    auto_scroll_to_bottom()
 
     with st.chat_message("assistant", avatar=WIBLY_AVATAR):
         placeholder = st.empty()
         placeholder.markdown("✨ **위블리가 실시간 DB를 확인하여 맞춤 견적을 작성 중입니다...** ⏳")
 
+        # 🚨 [수정됨] 민감 키워드 검사 (하이브리드 지원)
         vip_keywords = ["가라오케", "에코걸", "에코", "떡마사지", "VIP마사지", "불건전", "가라", "떡마사", "VIP마사","불건마", "불건마사", "불건마사지"]
-        has_vip = any(keyword in prompt for keyword in vip_keywords)
+        
+        prompt_no_space = prompt.replace(" ", "")
+        has_vip = any(keyword in prompt_no_space for keyword in vip_keywords)
 
         safe_prompt = prompt
         if has_vip:
             for kw in vip_keywords:
                 safe_prompt = safe_prompt.replace(kw, "").strip()
 
+        # 🚨 [수정됨] 귀여운 VIP 철벽 템플릿
         vip_template = """\n\n━━━━━━━━━━━━━━
-🔥 **다낭 위드어스 VIP 스페셜 안내**
+🔥 **다낭 위드어스 스페셜 문의**
 ━━━━━━━━━━━━━━
 
-> **🎤 당일 출근부 확인 후 추천드리는! 가라오케**
-> - 주대 세트: 맥주 120달러 (맥주 15캔, 마른안주, 과일안주 등 포함) 
-> - 소주 150달러 (소주 3병 맥주 8캔, 마른안주, 과일안주 등 포함) 
-> - 양주세트 200달러 (골든블루 1병 맥주 10캔, 마른안주, 과일안주 등 포함)
-> - 파트너 비용(TC): 롱타임 200$ (오후 6시부터 다음날 아침 6시까지 연애 2회)
->
-> **** 🔥🌟✨ 위드어스만의 장점! 수많은 매니저들 데이터로 내상 없는 완벽한 여행 🔥🌟✨ ****
-> - 초이스: 부끄러워서 잘못하겠어요... 누가 에이스인지 모르겠어요.... 맨날 내상만 입었어요... 
-> - 걱정하지 마세요! 옆에서 직접 어드바이스 해드립니다! 누가 에이스고! 누가 내상 유발자인지!
-> - 오직 직접 보시고 선택만 해주시면 됩니다! 👍👍👍👍👍
-> 사진 보기: https://drive.google.com/drive/folders/1NxMdQrKE89i-NW4y4do86dg2FkdOgHyA?usp=drive_link
->
-> **👩‍❤️‍👨 에코걸 (풀빌라 1:1 케어)**
-> - 12시간 동행 가이드: 250달러 (오후 6시부터 다음날 6시까지 연애 2회)
-> - 24시간 동행 가이드: 400달러 ~ 500달러 (수준별 상이, 시간은 별도 문의 연애 3회) 
-> - 낮에는 투어 가이드, 밤에는 프라이빗 파트너!
-> - 에코 같은 경우는 직접 초이스와 사진 초이스 둘 다 가능합니다!
-> - 다만 고객님들의 만족도 높은 여행을 위해서는 무!조!건! 직접 초이스가 월등히 높습니다!
->
-> **** 🔥🌟✨ 위드어스만의 장점! 수많은 매니저들 데이터로 내상 없는 완벽한 여행 🔥🌟✨ ****
-> - 걱정하지 마세요! 옆에서 직접 어드바이스 해드립니다! 누가 에이스고! 누가 내상 유발자인지!
-> - 오직 직접 보시고 선택만 해주시면 됩니다! 👍👍👍👍👍
-> 사진 보기: https://drive.google.com/file/d/11VyQPRcDD9V1VpmxLETF4e9pAjI-8toJ/view?usp=drive_link
->
-> **💆‍♂️ VIP 마사지 (프라이빗 코스)**
-> - A코스 (80분 1대1):  220만동 (초이스 + 연애 + 마사지) 
-> - B코스 (100분 2대1): 400만동 (초이스 + 누루 + 2대1 연애 + 마사지)
-> 사진 보기: https://drive.google.com/drive/folders/1Zu35o4CzNDPi5dizJnAh9kmCo2kq8Wtz?usp=drive_link
->
-> **💆‍♂️ 불건전 마사지 (힐링 코스)**
-> - 1 코스 (마사지 코스 60분): 사우나 + 동반목욕 + 바디마사지 + 누루서비스 + 마무리!
-> - 2 코스 (때밀이 코스 90분): 사우나 + 목욕 + 얼굴관리 + 전신때밀이 + 누루서비스 + 마무리!
-> 사진 보기: https://drive.google.com/drive/folders/1GPYXWb9uYTt_gbR1CSo_Xj4UD29cSSrZ?usp=drive_link
+고객님~~🥰 문의하신 특별한(?) 내용은 위블리가 대답할 수 없는 정보에용 ㅠㅡㅠ
+아래 **실시간 상담 링크 버튼**을 눌러서! 상담해주시면!
+저희 다낭 위드어스의 꼼꼼하신 대표님이 더 정확하고 자세한 안내 해드릴꺼에용~ 💕
 
-자세한 에코걸, 가라오케 스타일 맞춤 예약은 100% 비밀 보장되는 카카오톡 실시간 상담으로 진행됩니다! 😉👇
+> 👇 **아래 [실시간 예약 상담하기] 버튼을 꾹! 눌러주세요!** 👇
+
 오픈채팅: https://open.kakao.com/o/sxJ8neWg"""
 
+        # 고객이 오직 유흥 키워드만 입력했을 경우 (가로채기)
         if has_vip and len(safe_prompt) <= 2:
-            full_res = "고객님, 특별하고 프라이빗한 밤 문화를 찾으시는군요! 🤫 \n다낭 최고의 퀄리티로 확실하게 모시겠습니다. 아래 견적을 확인해 주세요." + vip_template
+            full_res = vip_template.strip()
             placeholder.empty()
             with placeholder.container():
                 render_assistant_content(full_res)
+        
+        # 정상적인 질문이 포함되어 있는 경우 (AI 처리 + 맨 밑에 철벽 멘트 추가)
         else:
             history_context = "\n".join([f"{m['role']}: {m['content']}" for m in st.session_state.messages[-10:]])
 
@@ -358,7 +361,7 @@ if prompt := st.chat_input("인원과 날짜를 말씀해 주세요!"):
 {history_context}"""
 
             try:
-                # 🚀 대표님의 확고한 명령에 따라 엔진을 gemini-3-flash-preview 로 무조건 고정합니다!
+                # 🚀 확고한 지시대로 gemini-3-flash-preview 고정
                 model = genai.GenerativeModel('gemini-3-flash-preview')
                 response = model.generate_content(f"{master_instruction}\n고객님: {safe_prompt}", stream=True)
 
@@ -372,13 +375,17 @@ if prompt := st.chat_input("인원과 날짜를 말씀해 주세요!"):
                             is_first_chunk = False
                         full_res += chunk.text
                         placeholder.markdown(full_res + "▌")
+                        # 글자가 출력될 때마다 스크롤을 끝까지 내리도록 지시
+                        auto_scroll_to_bottom()
 
+                # 🚨 정상 질문 + 유흥 질문이 섞여 있을 때 맨 마지막에 멘트 추가
                 if has_vip:
                     full_res += vip_template
 
                 placeholder.empty()
                 with placeholder.container():
                     render_assistant_content(full_res)
+                    auto_scroll_to_bottom()
 
             except Exception as e:
                 full_res = f"앗! 일시적인 통신 오류가 발생했어요. (에러 원인: {e})"
@@ -390,7 +397,7 @@ if prompt := st.chat_input("인원과 날짜를 말씀해 주세요!"):
     st.rerun()
 
 # ==========================================
-# 🌟 사이드바 (가로채기 퀵 버튼 & 설명서)
+# 🌟 사이드바 (간소화 완료)
 # ==========================================
 with st.sidebar:
     t_style = "color: #ffffff; font-weight: 900; text-align: center; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.8);"
@@ -401,7 +408,8 @@ with st.sidebar:
 
     st.markdown(f"""<h3 style="{t_style}">🚀 위블리 빠른 추천 🚀</h3>""", unsafe_allow_html=True)
 
-    if st.button('🍲 "맛집" 이 궁금하시다면! 버튼을 눌러주세요!', use_container_width=True):
+    # 🚨 [수정됨] 버튼 이름 간소화 완료
+    if st.button('" 맛집 " 추천', use_container_width=True):
         prompt = "다낭 맛집 추천해 줘"
         st.session_state.messages.append({"role": "user", "content": prompt})
 
@@ -463,7 +471,7 @@ with st.sidebar:
         run_background_tasks(st.session_state.user_id, prompt, food_res)
         st.rerun()
 
-    if st.button('🏞️ "관광지" 가 궁금하시다면! 버튼을 눌러주세요!', use_container_width=True):
+    if st.button('" 관광지 " 추천', use_container_width=True):
         prompt = "다낭 관광지 추천해 줘"
         st.session_state.messages.append({"role": "user", "content": prompt})
 
@@ -492,7 +500,7 @@ with st.sidebar:
         run_background_tasks(st.session_state.user_id, prompt, tour_res)
         st.rerun()
 
-    if st.button('☕ "분위기 좋은 카페" 가 궁금하시다면! 버튼을 눌러주세요!', use_container_width=True):
+    if st.button('" 카페 " 추천', use_container_width=True):
         prompt = "다낭 분위기 좋은 카페 추천해 줘"
         st.session_state.messages.append({"role": "user", "content": prompt})
 
