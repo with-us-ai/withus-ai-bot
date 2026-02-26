@@ -112,7 +112,7 @@ def auto_scroll_to_bottom():
     components.html(js_code, height=0)
 
 # ==========================================
-# 🎨 UI 디자인 및 모바일 최적화 (CSS)
+# 🎨 UI 디자인 및 모바일 최적화 (CSS 정밀 수정)
 # ==========================================
 css_style = """
     <style>
@@ -137,6 +137,7 @@ css_style += """
         background-color: transparent !important;
         max-width: 1000px; margin: auto;
         padding-bottom: 150px !important;
+        padding-top: 2rem !important; /* PC 기본 상단 여백 */
     }
     [data-testid="stSidebar"], [data-testid="stSidebar"] > div {
         background-color: rgba(255, 255, 255, 0.15) !important;
@@ -164,31 +165,39 @@ css_style += """
     [data-testid="stBottom"], [data-testid="stBottom"] > div { background-color: transparent !important; background: transparent !important; }
     [data-testid="stBottom"]::before, [data-testid="stBottom"] > div::before { display: none !important; background: transparent !important; }
     
-    /* 📱 모바일 최적화 마법 (반응형 미디어 쿼리) */
+    /* 📱 모바일 최적화 마법 (반응형 미디어 쿼리) - 정밀 타격 버전 */
     @media (max-width: 768px) {
-        /* 1. 메인 타이틀 글자 크기 축소 */
+        /* 🚨 [핵심] 메인 컨테이너 상단 여백 최소화 및 좌우 여백 확보 */
+        .main .block-container {
+            padding-top: 0.5rem !important; /* 상단 바짝 붙이기 */
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+        }
+        /* 🚨 [핵심] 메인 타이틀 글자 크기 및 자간 최적화 (한 줄 완성 목표) */
         .main-title-text {
-            font-size: 1.6rem !important;
+            font-size: 1.25rem !important; /* 한 줄에 들어갈 만큼 충분히 작게 */
+            letter-spacing: -0.5px !important; /* 자간 살짝 좁힘 */
             text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 2px 2px 5px rgba(0,0,0,0.8) !important;
         }
-        /* 2. 메인 타이틀 옆 로고 축소 */
-        .main-title-logo {
-            height: 70px !important;
+        /* 타이틀 컨테이너 간격 조정 */
+        .main-title-container {
+            gap: 5px !important;
+            margin-bottom: 15px !important;
         }
-        /* 3. 우측 하단 워터마크 로고 투명도 및 크기 축소 (화면 덜 가리게) */
+        /* 메인 타이틀 옆 로고 축소 */
+        .main-title-logo {
+            height: 50px !important;
+        }
+        /* 우측 하단 워터마크 로고 설정 */
         #watermark-logo {
             width: 80px !important;
             bottom: 100px !important;
             right: 15px !important;
             opacity: 0.3 !important;
         }
-        /* 4. 채팅방 글자 크기 살짝 축소 */
+        /* 채팅방 글자 크기 살짝 축소 */
         .stChatMessage .stMarkdown * {
             font-size: 0.95rem !important;
-        }
-        .main-title-container {
-            gap: 10px !important;
-            margin-bottom: 15px !important;
         }
     }
     </style>
@@ -197,7 +206,7 @@ st.markdown(css_style, unsafe_allow_html=True)
 
 if os.path.exists(LOGO_WATERMARK_FILE):
     logo_bin = get_base64_of_bin_file(LOGO_WATERMARK_FILE)
-    # 🚨 모바일 최적화를 위해 ID(watermark-logo) 부여
+    # 모바일 최적화를 위해 ID(watermark-logo) 부여
     st.markdown(f"""<div id="watermark-logo" style="position: fixed; bottom: 150px; right: 30px; width: 150px; z-index: 9999; pointer-events: none; opacity: 0.85; transform: rotate(10deg); filter: drop-shadow(2px 4px 3px rgba(0,0,0,0.5));"><img src="data:image/png;base64,{logo_bin}" style="width: 100%;"></div>""", unsafe_allow_html=True)
 
 if "messages" not in st.session_state: st.session_state.messages = []
@@ -260,7 +269,7 @@ col = st.columns([1, 10, 1])[1]
 with col:
     if os.path.exists(LOGO_WATERMARK_FILE):
         title_logo_bin = get_base64_of_bin_file(LOGO_WATERMARK_FILE)
-        # 🚨 모바일 최적화를 위해 class 부여
+        # 모바일 최적화를 위해 class 부여
         st.markdown(f"""
         <div class="main-title-container" style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 30px; flex-wrap: wrap;">
             <h1 class="main-title-text" style="margin: 0; color: #87CEEB; font-size: 3rem; font-weight: 900;
