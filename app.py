@@ -30,7 +30,7 @@ RE_KAKAO = re.compile(r'(https://open\.kakao\.com/[^\s\]]+)')
 RE_CLEAN = re.compile(r'(?:사진|영상|위치|지도|링크|오픈채팅|확인).*?((?:http|https)://\S+)')
 
 # ==========================================
-# 🚀 [최적화 2] 구글 시트 인증 (금고 데이터 사용)
+# 🚀 [최적화 2] 구글 시트 인증
 # ==========================================
 @st.cache_resource
 def get_sheets_service():
@@ -70,7 +70,6 @@ def get_withus_db():
         return {"villa": fd(v[0].get('values', [])), "golf": fd(v[1].get('values', [])), "spa": fd(v[2].get('values', [])), "car": fd(v[3].get('values', [])), "barber": fd(v[4].get('values', []))}
     except: return None
 
-# 텔레그램 발송
 def send_tele(u_id, u_m, a_m):
     safe_um = html.escape(u_m)
     safe_am = html.escape(a_m)
@@ -78,7 +77,6 @@ def send_tele(u_id, u_m, a_m):
     try: requests.post(f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage", json={"chat_id": TELEGRAM_CHAT_ID, "text": text, "parse_mode": "HTML"})
     except: pass
 
-# 구글 시트 저장
 def append_to_sheet(u_id, u_t, a_t):
     service = get_sheets_service()
     if not service: return
@@ -87,7 +85,6 @@ def append_to_sheet(u_id, u_t, a_t):
         service.spreadsheets().values().append(spreadsheetId=SHEET_ID, range='로그!A:D', valueInputOption='USER_ENTERED', body={'values': [[now, u_id, u_t, a_t]]}).execute()
     except: pass
 
-# 백그라운드 작업 처리
 def run_background_tasks(u_id, u_m, a_m):
     threading.Thread(target=append_to_sheet, args=(u_id, u_m, a_m)).start()
     threading.Thread(target=send_tele, args=(u_id, u_m, a_m)).start()
@@ -112,17 +109,14 @@ def auto_scroll_to_bottom():
     components.html(js_code, height=0)
 
 # ==========================================
-# 🎨 UI 디자인 및 모바일 최적화 (CSS 정밀 수정)
+# 🎨 강철 UI 디자인 & 모바일 완벽 최적화
 # ==========================================
 css_style = """
     <style>
-    /* 🚨 햄버거 메뉴 숨김 방지: header를 다시 살려두었습니다! */
+    /* 🚨 햄버거 메뉴 및 헤더 복구 유지 */
+    header[data-testid="stHeader"] { background: transparent !important; }
     footer {visibility: hidden;}
-"""
 
-if os.path.exists(BACKGROUND_IMAGE_FILE):
-    bg_bin = get_base64_of_bin_file(BACKGROUND_IMAGE_FILE)
-    css_style += f"""
     .stApp {{
         background-image: url("data:image/png;base64,{bg_bin}") !important;
         background-size: cover !important;
@@ -131,13 +125,6 @@ if os.path.exists(BACKGROUND_IMAGE_FILE):
         background-attachment: fixed !important;
         height: 100vh !important;
     }}
-    """
-
-css_style += """
-    /* 헤더(햄버거 메뉴 영역) 배경을 투명하게 만들어 예쁘게 유지 */
-    header[data-testid="stHeader"] {
-        background: transparent !important;
-    }
 
     .main .block-container {
         background-color: transparent !important;
@@ -145,6 +132,7 @@ css_style += """
         padding-bottom: 150px !important;
         padding-top: 1.5rem !important; 
     }
+    
     [data-testid="stSidebar"], [data-testid="stSidebar"] > div {
         background-color: rgba(255, 255, 255, 0.15) !important;
         backdrop-filter: blur(2px) !important;
@@ -171,25 +159,49 @@ css_style += """
     [data-testid="stBottom"], [data-testid="stBottom"] > div { background-color: transparent !important; background: transparent !important; }
     [data-testid="stBottom"]::before, [data-testid="stBottom"] > div::before { display: none !important; background: transparent !important; }
     
+    /* 🚨 [절대 안 깨지는 강철 타이틀 CSS] */
+    .main-title-container {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 15px !important;
+        margin-bottom: 25px !important;
+        flex-wrap: nowrap !important; /* 💥 절대 줄바꿈 불가 용접 */
+        width: 100% !important;
+    }
+    .main-title-text {
+        font-size: 2.8rem !important;
+        font-weight: 900 !important;
+        color: #87CEEB !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        white-space: nowrap !important; /* 💥 텍스트 줄바꿈 절대 방지 */
+        text-shadow: -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000, 5px 5px 8px rgba(0,0,0,0.8) !important;
+    }
+    .main-title-logo {
+        height: 140px !important; /* PC 로고 크기 */
+        object-fit: contain !important;
+        filter: drop-shadow(2px 4px 3px rgba(0,0,0,0.6)) !important;
+    }
+
     /* 📱 모바일 최적화 마법 (반응형 미디어 쿼리) */
     @media (max-width: 768px) {
         .main .block-container {
-            padding-top: 2rem !important; /* 햄버거 메뉴와 겹치지 않게 여백 약간 확보 */
+            padding-top: 1.5rem !important;
             padding-left: 10px !important;
             padding-right: 10px !important;
         }
-        .main-title-text {
-            font-size: 1.25rem !important; 
-            letter-spacing: -0.5px !important; 
-            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 2px 2px 5px rgba(0,0,0,0.8) !important;
-        }
         .main-title-container {
-            gap: 5px !important;
-            margin-bottom: 15px !important;
+            gap: 8px !important;
         }
-        /* 🚨 모바일 로고 크기 1.5배 증가 (50px -> 80px) */
+        .main-title-text {
+            /* 💥 화면 크기에 맞춰 글씨가 고무줄처럼 자동으로 줄어드는 마법의 속성 (절대 한줄 유지) */
+            font-size: clamp(1rem, 5vw, 1.5rem) !important; 
+            letter-spacing: -0.5px !important;
+        }
         .main-title-logo {
-            height: 80px !important;
+            height: 75px !important; /* 모바일 로고 크기 확실하게 1.5배 (기존 50->75) */
         }
         #watermark-logo {
             width: 80px !important;
@@ -203,7 +215,12 @@ css_style += """
     }
     </style>
 """
-st.markdown(css_style, unsafe_allow_html=True)
+
+bg_bin = get_base64_of_bin_file(BACKGROUND_IMAGE_FILE)
+if bg_bin:
+    st.markdown(css_style.replace("{bg_bin}", bg_bin), unsafe_allow_html=True)
+else:
+    st.markdown(css_style.replace('background-image: url("data:image/png;base64,{bg_bin}") !important;', ''), unsafe_allow_html=True)
 
 if os.path.exists(LOGO_WATERMARK_FILE):
     logo_bin = get_base64_of_bin_file(LOGO_WATERMARK_FILE)
@@ -269,18 +286,15 @@ col = st.columns([1, 10, 1])[1]
 with col:
     if os.path.exists(LOGO_WATERMARK_FILE):
         title_logo_bin = get_base64_of_bin_file(LOGO_WATERMARK_FILE)
-        # 🚨 PC 로고 크기도 1.5배 증가 (120px -> 180px)
+        # 🚨 [수정됨] 자동 번역기로 인한 UI 붕괴 방지 (translate="no") 및 절대 안 깨지는 span 태그 적용
         st.markdown(f"""
-        <div class="main-title-container" style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 30px; flex-wrap: wrap;">
-            <h1 class="main-title-text" style="margin: 0; color: #87CEEB; font-size: 3rem; font-weight: 900;
-                       text-shadow: -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000,
-                                    -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000,
-                                    5px 5px 8px rgba(0,0,0,0.8);">🌴 언제나 놀라운 만족감! With Us!</h1>
-            <img class="main-title-logo" src="data:image/png;base64,{title_logo_bin}" style="height: 180px; filter: drop-shadow(2px 4px 3px rgba(0,0,0,0.6));">
+        <div class="main-title-container" translate="no">
+            <span class="main-title-text">🌴 언제나 놀라운 만족감! With Us!</span>
+            <img class="main-title-logo" src="data:image/png;base64,{title_logo_bin}">
         </div>
         """, unsafe_allow_html=True)
     else:
-        st.markdown('<h1 class="main-title-text" style="color: #87CEEB; text-align:center;">🌴 언제나 놀라운 만족감! With Us!</h1>', unsafe_allow_html=True)
+        st.markdown('<div class="main-title-container" translate="no"><span class="main-title-text">🌴 언제나 놀라운 만족감! With Us!</span></div>', unsafe_allow_html=True)
 
     db = get_withus_db()
     if db is None: st.stop()
@@ -337,6 +351,7 @@ if prompt := st.chat_input("인원과 날짜를 말씀해 주세요!"):
             for kw in vip_keywords:
                 clean_history = clean_history.replace(kw, "")
 
+            # 🚨 [수정됨] 환율 쿠션 멘트가 템플릿 최하단에 항상 고정으로 찍히도록 세팅
             master_instruction = f"""당신은 다낭 위드어스 매니저 '위블리'입니다.
 아래 [🚨 상황별 답변 지침]을 우선적으로 파악하여 똑똑하게 대답하세요.
 
@@ -519,7 +534,7 @@ with st.sidebar:
 > - 특징: 세계에서 가장 긴 케이블카와 골든브릿지가 있는 다낭 랜드마크!
 > 위치 보기: https://maps.app.goo.gl/9cyKvXuwaqXWQP9V8
 >
-> **2. 호이안 올드타운 (Hoi An)**
+> **2. 호이안 올드타운 (Hoi 단)**
 > - 특징: 다낭에서 차로 40분. 로맨틱한 야경 맛집!
 > 위치 보기: https://maps.app.goo.gl/ysgHAp7ZtnrgKvo79
 >
