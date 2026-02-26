@@ -116,7 +116,8 @@ def auto_scroll_to_bottom():
 # ==========================================
 css_style = """
     <style>
-    #MainMenu, header, footer {visibility: hidden;}
+    /* 🚨 햄버거 메뉴 숨김 방지: header를 다시 살려두었습니다! */
+    footer {visibility: hidden;}
 """
 
 if os.path.exists(BACKGROUND_IMAGE_FILE):
@@ -133,11 +134,16 @@ if os.path.exists(BACKGROUND_IMAGE_FILE):
     """
 
 css_style += """
+    /* 헤더(햄버거 메뉴 영역) 배경을 투명하게 만들어 예쁘게 유지 */
+    header[data-testid="stHeader"] {
+        background: transparent !important;
+    }
+
     .main .block-container {
         background-color: transparent !important;
         max-width: 1000px; margin: auto;
         padding-bottom: 150px !important;
-        padding-top: 2rem !important; /* PC 기본 상단 여백 */
+        padding-top: 1.5rem !important; 
     }
     [data-testid="stSidebar"], [data-testid="stSidebar"] > div {
         background-color: rgba(255, 255, 255, 0.15) !important;
@@ -165,37 +171,32 @@ css_style += """
     [data-testid="stBottom"], [data-testid="stBottom"] > div { background-color: transparent !important; background: transparent !important; }
     [data-testid="stBottom"]::before, [data-testid="stBottom"] > div::before { display: none !important; background: transparent !important; }
     
-    /* 📱 모바일 최적화 마법 (반응형 미디어 쿼리) - 정밀 타격 버전 */
+    /* 📱 모바일 최적화 마법 (반응형 미디어 쿼리) */
     @media (max-width: 768px) {
-        /* 🚨 [핵심] 메인 컨테이너 상단 여백 최소화 및 좌우 여백 확보 */
         .main .block-container {
-            padding-top: 0.5rem !important; /* 상단 바짝 붙이기 */
+            padding-top: 2rem !important; /* 햄버거 메뉴와 겹치지 않게 여백 약간 확보 */
             padding-left: 10px !important;
             padding-right: 10px !important;
         }
-        /* 🚨 [핵심] 메인 타이틀 글자 크기 및 자간 최적화 (한 줄 완성 목표) */
         .main-title-text {
-            font-size: 1.25rem !important; /* 한 줄에 들어갈 만큼 충분히 작게 */
-            letter-spacing: -0.5px !important; /* 자간 살짝 좁힘 */
+            font-size: 1.25rem !important; 
+            letter-spacing: -0.5px !important; 
             text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 2px 2px 5px rgba(0,0,0,0.8) !important;
         }
-        /* 타이틀 컨테이너 간격 조정 */
         .main-title-container {
             gap: 5px !important;
             margin-bottom: 15px !important;
         }
-        /* 메인 타이틀 옆 로고 축소 */
+        /* 🚨 모바일 로고 크기 1.5배 증가 (50px -> 80px) */
         .main-title-logo {
-            height: 50px !important;
+            height: 80px !important;
         }
-        /* 우측 하단 워터마크 로고 설정 */
         #watermark-logo {
             width: 80px !important;
             bottom: 100px !important;
             right: 15px !important;
             opacity: 0.3 !important;
         }
-        /* 채팅방 글자 크기 살짝 축소 */
         .stChatMessage .stMarkdown * {
             font-size: 0.95rem !important;
         }
@@ -206,7 +207,6 @@ st.markdown(css_style, unsafe_allow_html=True)
 
 if os.path.exists(LOGO_WATERMARK_FILE):
     logo_bin = get_base64_of_bin_file(LOGO_WATERMARK_FILE)
-    # 모바일 최적화를 위해 ID(watermark-logo) 부여
     st.markdown(f"""<div id="watermark-logo" style="position: fixed; bottom: 150px; right: 30px; width: 150px; z-index: 9999; pointer-events: none; opacity: 0.85; transform: rotate(10deg); filter: drop-shadow(2px 4px 3px rgba(0,0,0,0.5));"><img src="data:image/png;base64,{logo_bin}" style="width: 100%;"></div>""", unsafe_allow_html=True)
 
 if "messages" not in st.session_state: st.session_state.messages = []
@@ -269,14 +269,14 @@ col = st.columns([1, 10, 1])[1]
 with col:
     if os.path.exists(LOGO_WATERMARK_FILE):
         title_logo_bin = get_base64_of_bin_file(LOGO_WATERMARK_FILE)
-        # 모바일 최적화를 위해 class 부여
+        # 🚨 PC 로고 크기도 1.5배 증가 (120px -> 180px)
         st.markdown(f"""
         <div class="main-title-container" style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 30px; flex-wrap: wrap;">
             <h1 class="main-title-text" style="margin: 0; color: #87CEEB; font-size: 3rem; font-weight: 900;
                        text-shadow: -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000,
                                     -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000,
                                     5px 5px 8px rgba(0,0,0,0.8);">🌴 언제나 놀라운 만족감! With Us!</h1>
-            <img class="main-title-logo" src="data:image/png;base64,{title_logo_bin}" style="height: 120px; filter: drop-shadow(2px 4px 3px rgba(0,0,0,0.6));">
+            <img class="main-title-logo" src="data:image/png;base64,{title_logo_bin}" style="height: 180px; filter: drop-shadow(2px 4px 3px rgba(0,0,0,0.6));">
         </div>
         """, unsafe_allow_html=True)
     else:
@@ -299,14 +299,12 @@ if prompt := st.chat_input("인원과 날짜를 말씀해 주세요!"):
     with st.chat_message("user", avatar=USER_AVATAR):
         st.markdown(prompt)
         
-    # 입력과 동시에 다시 한번 스크롤 내리기
     auto_scroll_to_bottom()
 
     with st.chat_message("assistant", avatar=WIBLY_AVATAR):
         placeholder = st.empty()
         placeholder.markdown("✨ **초! 고성능! 위블리가! 고객님을 위해 열심히 정보를 찾고 있어욥!** 🏃‍♀️💨🥰")
 
-        # 민감 키워드 검사
         vip_keywords = ["가라오케", "에코걸", "에코", "떡마사지", "VIP마사지", "불건전", "가라", "떡마사", "VIP마사","불건마", "불건마사", "불건마사지"]
         
         prompt_no_space = prompt.replace(" ", "")
@@ -317,7 +315,6 @@ if prompt := st.chat_input("인원과 날짜를 말씀해 주세요!"):
             for kw in vip_keywords:
                 safe_prompt = safe_prompt.replace(kw, "").strip()
 
-        # 귀여운 VIP 철벽 템플릿
         vip_template = """\n\n━━━━━━━━━━━━━━
 🔥 **다낭 위드어스 스페셜 문의**
 ━━━━━━━━━━━━━━
@@ -394,7 +391,7 @@ if prompt := st.chat_input("인원과 날짜를 말씀해 주세요!"):
 ━━━━━━━━━━━━━━
 💰 **예상 총합: 약 [총합원화]원**
 ━━━━━━━━━━━━━━
-*(💸 환율 1달러=1,500원 기준)*
+💖 *환율 변동 때문에 1달러 = 1,500원으로 여유롭게 책정했어용~ 🥰*
 
 [실시간 DB]
 {db}
@@ -416,10 +413,8 @@ if prompt := st.chat_input("인원과 날짜를 말씀해 주세요!"):
                             is_first_chunk = False
                         full_res += chunk.text
                         placeholder.markdown(full_res + "▌")
-                        # 글자가 출력될 때마다 스크롤을 끝까지 내리도록 지시
                         auto_scroll_to_bottom()
 
-                # 🚨 정상 질문 + 유흥 질문이 섞여 있을 때 맨 마지막에 멘트 추가
                 if has_vip:
                     full_res += vip_template
 
