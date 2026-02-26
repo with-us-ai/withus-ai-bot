@@ -112,7 +112,7 @@ def auto_scroll_to_bottom():
     components.html(js_code, height=0)
 
 # ==========================================
-# 🎨 UI 디자인
+# 🎨 UI 디자인 및 모바일 최적화 (CSS)
 # ==========================================
 css_style = """
     <style>
@@ -163,13 +163,42 @@ css_style += """
     .stChatMessage blockquote * { color: #ffffff !important; opacity: 1 !important; }
     [data-testid="stBottom"], [data-testid="stBottom"] > div { background-color: transparent !important; background: transparent !important; }
     [data-testid="stBottom"]::before, [data-testid="stBottom"] > div::before { display: none !important; background: transparent !important; }
+    
+    /* 📱 모바일 최적화 마법 (반응형 미디어 쿼리) */
+    @media (max-width: 768px) {
+        /* 1. 메인 타이틀 글자 크기 축소 */
+        .main-title-text {
+            font-size: 1.6rem !important;
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 2px 2px 5px rgba(0,0,0,0.8) !important;
+        }
+        /* 2. 메인 타이틀 옆 로고 축소 */
+        .main-title-logo {
+            height: 70px !important;
+        }
+        /* 3. 우측 하단 워터마크 로고 투명도 및 크기 축소 (화면 덜 가리게) */
+        #watermark-logo {
+            width: 80px !important;
+            bottom: 100px !important;
+            right: 15px !important;
+            opacity: 0.3 !important;
+        }
+        /* 4. 채팅방 글자 크기 살짝 축소 */
+        .stChatMessage .stMarkdown * {
+            font-size: 0.95rem !important;
+        }
+        .main-title-container {
+            gap: 10px !important;
+            margin-bottom: 15px !important;
+        }
+    }
     </style>
 """
 st.markdown(css_style, unsafe_allow_html=True)
 
 if os.path.exists(LOGO_WATERMARK_FILE):
     logo_bin = get_base64_of_bin_file(LOGO_WATERMARK_FILE)
-    st.markdown(f"""<div style="position: fixed; bottom: 150px; right: 30px; width: 150px; z-index: 9999; pointer-events: none; opacity: 0.85; transform: rotate(10deg); filter: drop-shadow(2px 4px 3px rgba(0,0,0,0.5));"><img src="data:image/png;base64,{logo_bin}" style="width: 100%;"></div>""", unsafe_allow_html=True)
+    # 🚨 모바일 최적화를 위해 ID(watermark-logo) 부여
+    st.markdown(f"""<div id="watermark-logo" style="position: fixed; bottom: 150px; right: 30px; width: 150px; z-index: 9999; pointer-events: none; opacity: 0.85; transform: rotate(10deg); filter: drop-shadow(2px 4px 3px rgba(0,0,0,0.5));"><img src="data:image/png;base64,{logo_bin}" style="width: 100%;"></div>""", unsafe_allow_html=True)
 
 if "messages" not in st.session_state: st.session_state.messages = []
 if "user_id" not in st.session_state: st.session_state.user_id = str(uuid.uuid4())
@@ -231,17 +260,18 @@ col = st.columns([1, 10, 1])[1]
 with col:
     if os.path.exists(LOGO_WATERMARK_FILE):
         title_logo_bin = get_base64_of_bin_file(LOGO_WATERMARK_FILE)
+        # 🚨 모바일 최적화를 위해 class 부여
         st.markdown(f"""
-        <div style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 30px; flex-wrap: wrap;">
-            <h1 style="margin: 0; color: #87CEEB; font-size: 3rem; font-weight: 900;
+        <div class="main-title-container" style="display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 30px; flex-wrap: wrap;">
+            <h1 class="main-title-text" style="margin: 0; color: #87CEEB; font-size: 3rem; font-weight: 900;
                        text-shadow: -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000,
                                     -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000,
                                     5px 5px 8px rgba(0,0,0,0.8);">🌴 언제나 놀라운 만족감! With Us!</h1>
-            <img src="data:image/png;base64,{title_logo_bin}" style="height: 120px; filter: drop-shadow(2px 4px 3px rgba(0,0,0,0.6));">
+            <img class="main-title-logo" src="data:image/png;base64,{title_logo_bin}" style="height: 120px; filter: drop-shadow(2px 4px 3px rgba(0,0,0,0.6));">
         </div>
         """, unsafe_allow_html=True)
     else:
-        st.title("🌴 언제나 놀라운 만족감! With Us!")
+        st.markdown('<h1 class="main-title-text" style="color: #87CEEB; text-align:center;">🌴 언제나 놀라운 만족감! With Us!</h1>', unsafe_allow_html=True)
 
     db = get_withus_db()
     if db is None: st.stop()
@@ -265,7 +295,6 @@ if prompt := st.chat_input("인원과 날짜를 말씀해 주세요!"):
 
     with st.chat_message("assistant", avatar=WIBLY_AVATAR):
         placeholder = st.empty()
-        # 🚨 [수정됨 1] 위블리 로딩 멘트 귀엽게 변경!
         placeholder.markdown("✨ **초! 고성능! 위블리가! 고객님을 위해 열심히 정보를 찾고 있어욥!** 🏃‍♀️💨🥰")
 
         # 민감 키워드 검사
@@ -302,7 +331,6 @@ if prompt := st.chat_input("인원과 날짜를 말씀해 주세요!"):
             for kw in vip_keywords:
                 clean_history = clean_history.replace(kw, "")
 
-            # 🚨 [수정됨 2, 3] 가견적 템플릿 내 차량 쿠션 멘트 & 골프 안내 멘트 추가!
             master_instruction = f"""당신은 다낭 위드어스 매니저 '위블리'입니다.
 아래 [🚨 상황별 답변 지침]을 우선적으로 파악하여 똑똑하게 대답하세요.
 
